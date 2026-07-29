@@ -1,0 +1,15 @@
+{
+  "inputs": [],
+  "servers": {
+    "OrderService": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "C:\\Repositories\\Personal\\DotNetMCP\\OrdersMCPServer"
+      ],
+      "env": {}
+    }
+  }
+}

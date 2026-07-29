@@ -3,13 +3,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OrdersMCPServer.OrderSystem.Client;
 using Serilog;
-using System.IO;
-using System;
 
 // Configure Serilog early so startup logs are captured. Use AppContext.BaseDirectory for a deterministic log folder
 var logDir = Path.Combine(AppContext.BaseDirectory, "logs");
 if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
 var logPath = Path.Combine(logDir, "ordersmcp-.log");
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .Enrich.FromLogContext()
@@ -19,7 +18,16 @@ Log.Logger = new LoggerConfiguration()
 // Emit a short startup message on stderr so MCP inspector shows where logs are written
 Console.Error.WriteLine($"Serilog writing to: {logPath}");
 
+//When creating the ApplicationHostBuilder, ensure you use CreateEmptyApplicationBuilder instead of CreateDefaultBuilder.
+//This ensures that the server does not write any additional messages to the console.
+//This is only necessary for servers using STDIO transport.
 var builder = Host.CreateEmptyApplicationBuilder(settings: null);
+
+// Avoid the below in STDIO servers, because the MCP protocol uses stdout for data and stderr for logs.
+// This can cause issues if the console output is redirected or captured by other tools.
+// Instead, we log to a file and use stderr for Serilog logs, while keeping stdout clean for MCP communication.
+//Console.WriteLine();
+
 // Route console/system logs through Serilog (but keep console to stderr for MCP protocol separation)
 builder.Logging.AddSerilog();
 builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
